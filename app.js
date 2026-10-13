@@ -227,10 +227,10 @@ function abrirJogo(tipo) {
 }
 
 async function adicionarPontosFimDeJogo(resultado) {
-  let pontosGanhos = 0;
-  if (resultado === 'vitoria') pontosGanhos = 15;
-  else if (resultado === 'empate') pontosGanhos = 5;
-  else pontosGanhos = 1;
+  let pontosMudanca = 0;
+  if (resultado === 'vitoria') pontosMudanca = 15;
+  else if (resultado === 'empate') pontosMudanca = 5;
+  else pontosMudanca = -10; // Perde 10 pontos em caso de derrota
 
   const sessao = (await supabase.auth.getSession()).data.session;
   if (!sessao) return;
@@ -250,7 +250,8 @@ async function adicionarPontosFimDeJogo(resultado) {
   }
 
   if (perfil) {
-    const novosPontos = (perfil.points || 0) + pontosGanhos;
+    // Garante que os pontos não fiquem abaixo de zero (opcional, mas recomendado)
+    const novosPontos = Math.max(0, (perfil.points || 0) + pontosMudanca);
     
     // Atualiza com os novos pontos
     const { error: erroAtualizacao } = await supabase
@@ -259,7 +260,7 @@ async function adicionarPontosFimDeJogo(resultado) {
       .eq('id', userId);
 
     if (erroAtualizacao) {
-      console.error('Erro ao atualizar pontos (Verifique o RLS no Supabase):', erroAtualizacao.message);
+      console.error('Erro ao atualizar pontos:', erroAtualizacao.message);
     } else {
       await atualizarDadosUsuario(sessao.user);
     }
