@@ -243,6 +243,8 @@ function abrirJogo(tipo) {
 function voltarMenuJogos() {
   pararJogoAtual();
   $('secao-jogo').hidden = true;
+  $('secao-pokemon').hidden = true;
+  $('secao-freetogame').hidden = true;
   $('secao-menu-jogos').hidden = false;
 }
 
@@ -263,21 +265,20 @@ $('btn-abrir-pokemon').addEventListener('click', async () => {
   });
 });
 
-$('btn-voltar-menu-pokemon').addEventListener('click', () => {
-  $('secao-pokemon').hidden = true;
-  $('secao-menu-jogos').hidden = false;
-});
+$('btn-voltar-menu-pokemon').addEventListener('click', voltarMenuJogos);
 
-$('pokemon-enviar').addEventListener('click', () => {
+$('pokemon-enviar').addEventListener('click', async () => {
   const palpite = $('pokemon-input').value.trim().toLowerCase();
   if (!palpite) return;
 
   if (palpite === pokemonRespostaAtual) {
-    $('pokemon-status').textContent = 'ACERTOU! 🎉 Era o ' + pokemonRespostaAtual.toUpperCase();
+    $('pokemon-status').textContent = 'ACERTOU! 🎉 Era o ' + pokemonRespostaAtual.toUpperCase() + ' (+15 pts)';
     $('pokemon-img').style.filter = 'brightness(1)';
     $('pokemon-input').disabled = true;
     $('pokemon-enviar').disabled = true;
     $('pokemon-proximo').hidden = false;
+
+    await adicionarPontosFimDeJogo('vitoria');
   } else {
     $('pokemon-status').textContent = 'Errou! Tente novamente.';
   }
@@ -299,10 +300,7 @@ $('btn-abrir-freetogame').addEventListener('click', () => {
   APIs.carregarJogosGratis($('lista-freetogame'));
 });
 
-$('btn-voltar-menu-freetogame').addEventListener('click', () => {
-  $('secao-freetogame').hidden = true;
-  $('secao-menu-jogos').hidden = false;
-});
+$('btn-voltar-menu-freetogame').addEventListener('click', voltarMenuJogos);
 
 // Event Listeners Principais
 $('btn-jogar-velha').addEventListener('click', () => abrirJogo('velha'));
