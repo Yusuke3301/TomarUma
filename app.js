@@ -176,21 +176,41 @@ function pararJogoAtual() {
 }
 
 async function adicionarPontosFimDeJogo(resultado) {
-  let pontosGanhos = 0;
-  if (resultado === 'vitoria') pontosGanhos = 15;
-  else if (resultado === 'empate') pontosGanhos = 5;
-  else pontosGanhos = 1;
+  let pontosMudanca = 0;
+  if (resultado === 'vitoria') pontosMudanca = 15;
+  else if (resultado === 'empate') pontosMudanca = 5;
+  else pontosMudanca = -10; // Perde 10 pontos em caso de derrota
 
   const sessao = (await supabase.auth.getSession()).data.session;
   if (!sessao) return;
 
   const userId = sessao.user.id;
-  const { data: perfil } = await supabase.from('profiles').select('points').eq('id', userId).single();
   
+  // Busca os pontos atuais
+  const { data: perfil, error: erroBusca } = await supabase
+    .from('profiles')
+    .select('points')
+    .eq('id', userId)
+    .single();
+  
+  if (erroBusca) {
+    console.error('Erro ao buscar perfil:', erroBusca.message);
+    return;
+  }
+
   if (perfil) {
-    const novosPontos = (perfil.points || 0) + pontosGanhos;
-    const { error } = await supabase.from('profiles').update({ points: novosPontos }).eq('id', userId);
-    if (!error) {
+    // Garante que os pontos não fiquem abaixo de zero
+    const novosPontos = Math.max(0, (perfil.points || 0) + pontosMudanca);
+    
+    // Atualiza com os novos pontos
+    const { error: erroAtualizacao } = await supabase
+      .from('profiles')
+      .update({ points: novosPontos })
+      .eq('id', userId);
+
+    if (erroAtualizacao) {
+      console.error('Erro ao atualizar pontos:', erroAtualizacao.message);
+    } else {
       await atualizarDadosUsuario(sessao.user);
     }
   }
@@ -225,48 +245,6 @@ function abrirJogo(tipo) {
     instanciaJogoAtual = JogoCobrinha.iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu);
   }
 }
-
-async function adicionarPontosFimDeJogo(resultado) {
-  let pontosMudanca = 0;
-  if (resultado === 'vitoria') pontosMudanca = 15;
-  else if (resultado === 'empate') pontosMudanca = 5;
-  else pontosMudanca = -10; // Perde 10 pontos em caso de derrota
-
-  const sessao = (await supabase.auth.getSession()).data.session;
-  if (!sessao) return;
-
-  const userId = sessao.user.id;
-  
-  // Busca os pontos atuais
-  const { data: perfil, error: erroBusca } = await supabase
-    .from('profiles')
-    .select('points')
-    .eq('id', userId)
-    .single();
-  
-  if (erroBusca) {
-    console.error('Erro ao buscar perfil:', erroBusca.message);
-    return;
-  }
-
-  if (perfil) {
-    // Garante que os pontos não fiquem abaixo de zero (opcional, mas recomendado)
-    const novosPontos = Math.max(0, (perfil.points || 0) + pontosMudanca);
-    
-    // Atualiza com os novos pontos
-    const { error: erroAtualizacao } = await supabase
-      .from('profiles')
-      .update({ points: novosPontos })
-      .eq('id', userId);
-
-    if (erroAtualizacao) {
-      console.error('Erro ao atualizar pontos:', erroAtualizacao.message);
-    } else {
-      await atualizarDadosUsuario(sessao.user);
-    }
-  }
-}
-
 
 function voltarMenuJogos() {
   pararJogoAtual();
