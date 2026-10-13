@@ -1,8 +1,7 @@
-// Cobrinha: coma maçãs sem bater na parede nem no próprio corpo.
+// Cobrinha com meta de 25 maçãs.
+
 export const COLUNAS = 16;
 export const LINHAS = 16;
-export const META = 10;
-export const MINIMO_EMPATE = 5;
 
 export function sortearComida(cobra, rand = Math.random) {
   const ocupadas = new Set(cobra.map((c) => c.x + ',' + c.y));
@@ -20,7 +19,7 @@ export function novoEstado(rand = Math.random) {
   return { cobra, dir: { x: 1, y: 0 }, comida: sortearComida(cobra, rand), macas: 0, fim: null };
 }
 
-export function passo(estado, dirDesejada, rand = Math.random) {
+export function passo(estado, dirDesejada, meta, rand = Math.random) {
   if (estado.fim) return estado;
 
   let dir = estado.dir;
@@ -43,7 +42,7 @@ export function passo(estado, dirDesejada, rand = Math.random) {
   if (!comeu) return { ...estado, cobra, dir };
 
   const macas = estado.macas + 1;
-  const atingiuMeta = macas >= META;
+  const atingiuMeta = macas >= meta;
   return {
     cobra,
     dir,
@@ -53,17 +52,29 @@ export function passo(estado, dirDesejada, rand = Math.random) {
   };
 }
 
-export function classificar(macas) {
-  if (macas >= META) return 'vitoria';
-  if (macas >= MINIMO_EMPATE) return 'empate';
+export function classificar(macas, meta) {
+  const minimoEmpate = Math.floor(meta / 2);
+  if (macas >= meta) return 'vitoria';
+  if (macas >= minimoEmpate) return 'empate';
   return 'derrota';
 }
 
-export const intervalo = (macas) => Math.max(70, 140 - macas * 7);
-
 // ---------- Interface ----------
-export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
+export function iniciar(palco, dificuldade = 'medio', aoTerminar, aoReiniciar) {
   palco.replaceChildren();
+
+  let META = 25; // Meta de maçãs alterada para 25
+  let velocidadeBase = 130;
+
+  if (dificuldade === 'facil') {
+    META = 12;
+    velocidadeBase = 160;
+  } else if (dificuldade === 'dificil') {
+    META = 25;
+    velocidadeBase = 90; // Mais rápido e desafiador
+  }
+
+  const intervaloVelocidade = (macas) => Math.max(45, velocidadeBase - macas * 3);
 
   let estado = novoEstado();
   const fila = [];
@@ -108,28 +119,19 @@ export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
     dpad.appendChild(b);
   }
 
-  // Painel de fim de jogo
   const painelFim = document.createElement('div');
   painelFim.className = 'painel-fim-jogo';
   painelFim.hidden = true;
 
   const btnReiniciar = document.createElement('button');
   btnReiniciar.type = 'button';
-  btnReiniciar.className = 'btn-principal';
+  btnReiniciar.className = 'btn-principal btn-largura-total';
   btnReiniciar.textContent = 'Jogar Novamente';
   btnReiniciar.addEventListener('click', () => {
     if (aoReiniciar) aoReiniciar();
   });
 
-  const btnMenu = document.createElement('button');
-  btnMenu.type = 'button';
-  btnMenu.className = 'btn-secundario';
-  btnMenu.textContent = 'Menu Principal';
-  btnMenu.addEventListener('click', () => {
-    if (aoVoltarMenu) aoVoltarMenu();
-  });
-
-  painelFim.append(btnReiniciar, btnMenu);
+  painelFim.appendChild(btnReiniciar);
   palco.append(info, canvas, botaoIniciar, dpad, painelFim);
 
   function atualizarInfo() {
@@ -177,7 +179,7 @@ export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
   }
 
   function tick() {
-    estado = passo(estado, fila.shift());
+    estado = passo(estado, fila.shift(), META);
     desenhar();
     atualizarInfo();
     if (estado.fim) {
@@ -189,17 +191,17 @@ export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
       dpad.hidden = true;
       painelFim.hidden = false;
 
-      aoTerminar(classificar(estado.macas));
+      aoTerminar(classificar(estado.macas, META));
       return;
     }
-    timer = setTimeout(tick, intervalo(estado.macas));
+    timer = setTimeout(tick, intervaloVelocidade(estado.macas));
   }
 
   function comecar() {
     if (rodando || encerrado) return;
     rodando = true;
     botaoIniciar.hidden = true;
-    timer = setTimeout(tick, intervalo(0));
+    timer = setTimeout(tick, intervaloVelocidade(0));
   }
 
   botaoIniciar.addEventListener('click', comecar);

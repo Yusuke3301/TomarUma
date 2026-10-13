@@ -1,5 +1,4 @@
 // Jogo da Velha: você (X) contra o bot (O).
-export const CHANCE_ERRO = 0.3;
 
 const COMBOS = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -60,18 +59,25 @@ export function melhorJogada(t, bot = 'O', humano = 'X') {
   return escolha;
 }
 
-export function jogadaBot(t, chanceErro = CHANCE_ERRO, rand = Math.random) {
+export function jogadaBot(t, chanceErro = 0.3, rand = Math.random) {
   const casas = livres(t);
-  if (rand() < chanceErro) return casas[Math.floor(rand() * casas.length)];
+  // Se a chance de erro for 0 (difícil), ele SEMPRE joga a melhor jogada perfeita
+  if (chanceErro > 0 && rand() < chanceErro) {
+    return casas[Math.floor(rand() * casas.length)];
+  }
   return melhorJogada(t);
 }
 
 // ---------- Interface ----------
-export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
+export function iniciar(palco, dificuldade = 'medio', aoTerminar, aoReiniciar) {
   const t = Array(9).fill(null);
   let encerrada = false;
   let esperandoBot = false;
   const timers = new Set();
+
+  let chanceErro = 0.3; // Médio
+  if (dificuldade === 'facil') chanceErro = 0.6;
+  if (dificuldade === 'dificil') chanceErro = 0.0; // 0% de erro = Bot Imbatível (Perfeito)
 
   const agendar = (fn, ms) => {
     const id = setTimeout(() => {
@@ -99,28 +105,19 @@ export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
     return botao;
   });
 
-  // Container de botões de fim de jogo (inicialmente oculto)
   const painelFim = document.createElement('div');
   painelFim.className = 'painel-fim-jogo';
   painelFim.hidden = true;
 
   const btnReiniciar = document.createElement('button');
   btnReiniciar.type = 'button';
-  btnReiniciar.className = 'btn-principal';
+  btnReiniciar.className = 'btn-principal btn-largura-total';
   btnReiniciar.textContent = 'Jogar Novamente';
   btnReiniciar.addEventListener('click', () => {
     if (aoReiniciar) aoReiniciar();
   });
 
-  const btnMenu = document.createElement('button');
-  btnMenu.type = 'button';
-  btnMenu.className = 'btn-secundario';
-  btnMenu.textContent = 'Menu Principal';
-  btnMenu.addEventListener('click', () => {
-    if (aoVoltarMenu) aoVoltarMenu();
-  });
-
-  painelFim.append(btnReiniciar, btnMenu);
+  painelFim.appendChild(btnReiniciar);
   palco.append(status, grade, painelFim);
   status.textContent = 'SUA VEZ // VOCÊ É X';
 
@@ -144,10 +141,7 @@ export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
     status.textContent =
       resultado === 'vitoria' ? 'VOCÊ VENCEU!' : resultado === 'derrota' ? 'O BOT VENCEU!' : 'DEU VELHA!';
     
-    // Mostra botões de reiniciar/menu
     painelFim.hidden = false;
-
-    // Notifica o app.js para salvar os pontos
     aoTerminar(resultado);
     return true;
   }
@@ -160,10 +154,10 @@ export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
     esperandoBot = true;
     status.textContent = 'BOT CALCULANDO...';
     agendar(() => {
-      marcar(jogadaBot(t), 'O');
+      marcar(jogadaBot(t, chanceErro), 'O');
       esperandoBot = false;
       if (!verificarFim()) status.textContent = 'SUA VEZ // VOCÊ É X';
-    }, 400);
+    }, 300);
   }
 
   return {

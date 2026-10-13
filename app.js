@@ -227,16 +227,12 @@ function abrirJogo(tipo) {
     abrirJogo(tipoJogoAtivo);
   };
 
-  const aoVoltarMenu = () => {
-    voltarMenuJogos();
-  };
-
   if (tipo === 'velha') {
     titulo.textContent = 'Jogo da Velha (' + dificuldade.toUpperCase() + ')';
-    instanciaJogoAtual = JogoVelha.iniciar(palco, dificuldade, aoTerminar, aoReiniciar, aoVoltarMenu);
+    instanciaJogoAtual = JogoVelha.iniciar(palco, dificuldade, aoTerminar, aoReiniciar);
   } else if (tipo === 'cobrinha') {
     titulo.textContent = 'Cobrinha (' + dificuldade.toUpperCase() + ')';
-    instanciaJogoAtual = JogoCobrinha.iniciar(palco, dificuldade, aoTerminar, aoReiniciar, aoVoltarMenu);
+    instanciaJogoAtual = JogoCobrinha.iniciar(palco, dificuldade, aoTerminar, aoReiniciar);
   }
 }
 
