@@ -1,0 +1,140 @@
+:root {
+  --fundo: #0f1220;
+  --cartao: #181c30;
+  --borda: #2a3050;
+  --texto: #eef0ff;
+  --suave: #9aa3c7;
+  --destaque: #7c5cff;
+  --destaque-2: #4cc9f0;
+  --erro: #ff6b81;
+  --ok: #4ade80;
+  --bronze: #cd7f32;
+  --prata: #c7ccd6;
+  --ouro: #ffd24a;
+  --diamante: #5ce1ff;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--texto);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(124, 92, 255, 0.25), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(76, 201, 240, 0.15), transparent 40%),
+    var(--fundo);
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.topo { text-align: center; padding: 8px 0 4px; }
+.topo h1 { margin: 0; font-size: 2.2rem; letter-spacing: -0.5px; }
+.topo h1 span {
+  background: linear-gradient(90deg, var(--destaque), var(--destaque-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.topo p { margin: 6px 0 0; color: var(--suave); }
+
+.cartao {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.abas { display: flex; gap: 8px; margin-bottom: 16px; }
+.aba {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--suave);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.aba.ativa { color: var(--texto); border-color: var(--destaque); background: rgba(124, 92, 255, 0.15); }
+
+form { display: flex; flex-direction: column; gap: 12px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--suave); }
+input {
+  padding: 12px;
+  font-size: 1rem;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+input:focus { outline: 2px solid var(--destaque); border-color: transparent; }
+
+button { font: inherit; }
+.primario, .secundario {
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primario {
+  border: none;
+  color: #fff;
+  background: linear-gradient(90deg, var(--destaque), #5b8cff);
+}
+.primario:disabled { opacity: 0.6; cursor: wait; }
+.secundario { border: 1px solid var(--borda); background: transparent; color: var(--suave); }
+
+#msg { margin: 0; min-height: 1.2em; font-size: 0.9rem; }
+#msg.erro { color: var(--erro); }
+#msg.ok { color: var(--ok); }
+
+.perfil { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.rotulo { margin: 0; font-size: 0.75rem; color: var(--suave); text-transform: uppercase; letter-spacing: 1px; }
+.perfil h2 { margin: 2px 0 0; font-size: 1.4rem; overflow-wrap: anywhere; }
+.pontos { text-align: center; }
+.pontos strong { display: block; font-size: 1.8rem; }
+.pontos span { font-size: 0.75rem; color: var(--suave); }
+
+.selo {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: #12141f;
+}
+.selo.bronze { background: var(--bronze); }
+.selo.prata { background: var(--prata); }
+.selo.ouro { background: var(--ouro); }
+.selo.diamante { background: var(--diamante); box-shadow: 0 0 14px rgba(92, 225, 255, 0.6); }
+
+h3 { margin: 0 0 12px; }
+.ranking { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ranking li {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+.ranking li.eu { border-color: var(--destaque); background: rgba(124, 92, 255, 0.12); }
+.ranking .pos { color: var(--suave); font-weight: 700; }
+.ranking .nome { overflow-wrap: anywhere; }
+.ranking .pts { color: var(--suave); font-variant-numeric: tabular-nums; }
+.ranking .selo { padding: 3px 10px; font-size: 0.72rem; }
+
+.aviso p { margin: 0; color: var(--suave); text-align: center; font-size: 0.9rem; }
+.vazio { color: var(--suave); text-align: center; margin: 0; }
