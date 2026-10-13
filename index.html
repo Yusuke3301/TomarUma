@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0f1220">
-  <title>TomarUma</title>
+  <meta name="theme-color" content="#070913">
+  <title>TomarUma - Arcade</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
     </header>
 
     <!-- Tela de login / cadastro -->
-    <section id="tela-auth" class="cartao">
+    <section id="tela-auth" class="cartao glow">
       <div class="abas">
         <button id="aba-entrar" class="aba ativa" type="button">Entrar</button>
         <button id="aba-criar" class="aba" type="button">Criar conta</button>
@@ -34,35 +34,61 @@
           Senha
           <input id="senha" type="password" minlength="6" autocomplete="current-password" placeholder="mínimo 6 caracteres" required>
         </label>
-        <button id="btn-enviar" type="submit" class="primario">Entrar</button>
+        <button id="btn-enviar" type="submit" class="btn-principal">Entrar</button>
         <p id="msg" role="status"></p>
       </form>
     </section>
 
     <!-- Tela do jogador logado -->
     <section id="tela-app" hidden>
-      <div class="cartao perfil">
+      <div class="cartao perfil glow">
         <div>
           <p class="rotulo">Jogador</p>
           <h2 id="nome">-</h2>
         </div>
-        <div class="pontos">
+        <div class="pontos-info">
           <strong id="pontos">0</strong>
           <span>pontos</span>
         </div>
         <span id="selo" class="selo bronze">bronze</span>
       </div>
 
+      <!-- Seção de Seleção de Jogos -->
+      <div id="secao-menu-jogos" class="cartao">
+        <h3>Escolha um Jogo</h3>
+        <div class="menu-jogos">
+          <button id="btn-jogar-velha" class="btn-jogo">
+            <span class="icone-jogo">❌</span>
+            <div>
+              <strong>Jogo da Velha</strong>
+              <small>Desafie o bot inteligente</small>
+            </div>
+          </button>
+          <button id="btn-jogar-cobrinha" class="btn-jogo">
+            <span class="icone-jogo">🐍</span>
+            <div>
+              <strong>Cobrinha</strong>
+              <small>Coma maçãs e fuja da cauda</small>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Palco onde os jogos rodam -->
+      <div id="secao-jogo" class="cartao" hidden>
+        <div class="cabecalho-jogo">
+          <h3 id="titulo-jogo-ativo">Jogo</h3>
+          <button id="btn-voltar-menu" class="btn-secundario" type="button">Voltar ao Menu</button>
+        </div>
+        <div id="palco-jogo"></div>
+      </div>
+
       <div class="cartao">
-        <h3>Ranking</h3>
+        <h3>Ranking Global</h3>
         <ol id="ranking" class="ranking"></ol>
       </div>
 
-      <div class="cartao aviso">
-        <p>Os jogos chegam nas próximas etapas: jogo da velha e cobrinha.</p>
-      </div>
-
-      <button id="btn-sair" class="secundario" type="button">Sair</button>
+      <button id="btn-sair" class="btn-secundario btn-largura-total" type="button">Sair da Conta</button>
     </section>
   </main>
 

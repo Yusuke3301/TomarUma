@@ -1,12 +1,13 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/+esm';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import * as JogoVelha from './velha.js';
+import * as JogoCobrinha from './cobrinha.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (id) => document.getElementById(id);
 
-let modo = 'entrar'; // 'entrar' ou 'criar'
-
-// ---------- Mensagens ----------
+let modo = 'entrar';
+let instanciaJogoAtual = null;
 
 function mensagem(texto, tipo = 'erro') {
   const el = $('msg');
@@ -29,8 +30,6 @@ function traduzirErro(erro) {
   return 'Algo deu errado: ' + (erro && erro.message ? erro.message : 'erro desconhecido');
 }
 
-// ---------- Abas Entrar / Criar conta ----------
-
 function definirModo(novo) {
   modo = novo;
   const criar = modo === 'criar';
@@ -44,8 +43,6 @@ function definirModo(novo) {
 
 $('aba-entrar').addEventListener('click', () => definirModo('entrar'));
 $('aba-criar').addEventListener('click', () => definirModo('criar'));
-
-// ---------- Envio do formulário ----------
 
 $('form-auth').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -84,11 +81,13 @@ $('form-auth').addEventListener('submit', async (e) => {
   }
 });
 
-$('btn-sair').addEventListener('click', () => supabase.auth.signOut());
-
-// ---------- Telas ----------
+$('btn-sair').addEventListener('click', () => {
+  pararJogoAtual();
+  supabase.auth.signOut();
+});
 
 function mostrarAuth() {
+  pararJogoAtual();
   $('tela-app').hidden = true;
   $('tela-auth').hidden = false;
   $('senha').value = '';
@@ -97,7 +96,10 @@ function mostrarAuth() {
 async function mostrarApp(user) {
   $('tela-auth').hidden = true;
   $('tela-app').hidden = false;
+  await atualizarDadosUsuario(user);
+}
 
+async function atualizarDadosUsuario(user) {
   const [resPerfil, resRanking] = await Promise.all([
     supabase.from('profiles').select('username, points').eq('id', user.id).single(),
     supabase
@@ -133,7 +135,7 @@ function desenharRanking(lista, meuNome) {
   if (lista.length === 0) {
     const p = document.createElement('p');
     p.className = 'vazio';
-    p.textContent = 'Ainda não há jogadores.';
+    p.textContent = 'Ainda não há jogadores no ranking.';
     ol.appendChild(p);
     return;
   }
@@ -146,7 +148,6 @@ function desenharRanking(lista, meuNome) {
     pos.className = 'pos';
     pos.textContent = item.posicao + 'º';
 
-    // textContent (e não innerHTML) evita que um apelido com HTML vire código na página
     const nome = document.createElement('span');
     nome.className = 'nome';
     nome.textContent = item.username;
@@ -164,9 +165,65 @@ function desenharRanking(lista, meuNome) {
   }
 }
 
-// ---------- Sessão ----------
-// Dispara ao abrir a página (com ou sem sessão salva), no login e no logout.
-// O setTimeout evita fazer chamadas ao Supabase de dentro do próprio callback.
+// ---------- Gerenciamento dos Jogos ----------
+
+function pararJogoAtual() {
+  if (instanciaJogoAtual && typeof instanciaJogoAtual.destruir === 'function') {
+    instanciaJogoAtual.destruir();
+  }
+  instanciaJogoAtual = null;
+}
+
+async function adicionarPontosFimDeJogo(resultado) {
+  // Atribui pontos baseados no resultado
+  let pontosGanhos = 0;
+  if (resultado === 'vitoria') pontosGanhos = 15;
+  else if (resultado === 'empate') pontosGanhos = 5;
+  else pontosGanhos = 1; // derrota
+
+  const sessao = (await supabase.auth.getSession()).data.session;
+  if (!sessao) return;
+
+  const userId = sessao.user.id;
+  const { data: perfil } = await supabase.from('profiles').select('points').eq('id', userId).single();
+  
+  if (perfil) {
+    const novosPontos = (perfil.points || 0) + pontosGanhos;
+    await supabase.from('profiles').update({ points: novosPontos }).eq('id', userId);
+    await atualizarDadosUsuario(sessao.user);
+  }
+}
+
+function abrirJogo(tipo) {
+  pararJogoAtual();
+  $('secao-menu-jogos').hidden = true;
+  $('secao-jogo').hidden = false;
+  
+  const palco = $('palco-jogo');
+  const titulo = $('titulo-jogo-ativo');
+
+  const aoTerminar = async (resultado) => {
+    await adicionarPontosFimDeJogo(resultado);
+  };
+
+  if (tipo === 'velha') {
+    titulo.textContent = 'Jogo da Velha';
+    instanciaJogoAtual = JogoVelha.iniciar(palco, aoTerminar);
+  } else if (tipo === 'cobrinha') {
+    titulo.textContent = 'Cobrinha';
+    instanciaJogoAtual = JogoCobrinha.iniciar(palco, aoTerminar);
+  }
+}
+
+function voltarMenuJogos() {
+  pararJogoAtual();
+  $('secao-jogo').hidden = true;
+  $('secao-menu-jogos').hidden = false;
+}
+
+$('btn-jogar-velha').addEventListener('click', () => abrirJogo('velha'));
+$('btn-jogar-cobrinha').addEventListener('click', () => abrirJogo('cobrinha'));
+$('btn-voltar-menu').addEventListener('click', voltarMenuJogos);
 
 supabase.auth.onAuthStateChange((_evento, sessao) => {
   setTimeout(() => {
