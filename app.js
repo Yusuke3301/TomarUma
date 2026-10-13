@@ -2,6 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import * as JogoVelha from './velha.js';
 import * as JogoCobrinha from './cobrinha.js';
+import * as APIs from './apis.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (id) => document.getElementById(id);
@@ -179,38 +180,28 @@ async function adicionarPontosFimDeJogo(resultado) {
   let pontosMudanca = 0;
   if (resultado === 'vitoria') pontosMudanca = 15;
   else if (resultado === 'empate') pontosMudanca = 5;
-  else pontosMudanca = -10; // Perde 10 pontos em caso de derrota
+  else pontosMudanca = -10;
 
   const sessao = (await supabase.auth.getSession()).data.session;
   if (!sessao) return;
 
   const userId = sessao.user.id;
-  
-  // Busca os pontos atuais
   const { data: perfil, error: erroBusca } = await supabase
     .from('profiles')
     .select('points')
     .eq('id', userId)
     .single();
   
-  if (erroBusca) {
-    console.error('Erro ao buscar perfil:', erroBusca.message);
-    return;
-  }
+  if (erroBusca) return;
 
   if (perfil) {
-    // Garante que os pontos não fiquem abaixo de zero
     const novosPontos = Math.max(0, (perfil.points || 0) + pontosMudanca);
-    
-    // Atualiza com os novos pontos
     const { error: erroAtualizacao } = await supabase
       .from('profiles')
       .update({ points: novosPontos })
       .eq('id', userId);
 
-    if (erroAtualizacao) {
-      console.error('Erro ao atualizar pontos:', erroAtualizacao.message);
-    } else {
+    if (!erroAtualizacao) {
       await atualizarDadosUsuario(sessao.user);
     }
   }
@@ -219,6 +210,9 @@ async function adicionarPontosFimDeJogo(resultado) {
 function abrirJogo(tipo) {
   pararJogoAtual();
   tipoJogoAtivo = tipo;
+  
+  const dificuldade = $('select-dificuldade').value;
+
   $('secao-menu-jogos').hidden = true;
   $('secao-jogo').hidden = false;
   
@@ -238,11 +232,11 @@ function abrirJogo(tipo) {
   };
 
   if (tipo === 'velha') {
-    titulo.textContent = 'Jogo da Velha';
-    instanciaJogoAtual = JogoVelha.iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu);
+    titulo.textContent = 'Jogo da Velha (' + dificuldade.toUpperCase() + ')';
+    instanciaJogoAtual = JogoVelha.iniciar(palco, dificuldade, aoTerminar, aoReiniciar, aoVoltarMenu);
   } else if (tipo === 'cobrinha') {
-    titulo.textContent = 'Cobrinha';
-    instanciaJogoAtual = JogoCobrinha.iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu);
+    titulo.textContent = 'Cobrinha (' + dificuldade.toUpperCase() + ')';
+    instanciaJogoAtual = JogoCobrinha.iniciar(palco, dificuldade, aoTerminar, aoReiniciar, aoVoltarMenu);
   }
 }
 
@@ -252,6 +246,65 @@ function voltarMenuJogos() {
   $('secao-menu-jogos').hidden = false;
 }
 
+// ---------- Controle das APIs Externas ----------
+
+let pokemonRespostaAtual = '';
+
+$('btn-abrir-pokemon').addEventListener('click', async () => {
+  $('secao-menu-jogos').hidden = true;
+  $('secao-pokemon').hidden = false;
+  
+  pokemonRespostaAtual = await APIs.carregarPokemonAleatorio({
+    imgEl: $('pokemon-img'),
+    statusEl: $('pokemon-status'),
+    inputEl: $('pokemon-input'),
+    btnEnviar: $('pokemon-enviar'),
+    btnProximo: $('pokemon-proximo')
+  });
+});
+
+$('btn-voltar-menu-pokemon').addEventListener('click', () => {
+  $('secao-pokemon').hidden = true;
+  $('secao-menu-jogos').hidden = false;
+});
+
+$('pokemon-enviar').addEventListener('click', () => {
+  const palpite = $('pokemon-input').value.trim().toLowerCase();
+  if (!palpite) return;
+
+  if (palpite === pokemonRespostaAtual) {
+    $('pokemon-status').textContent = 'ACERTOU! 🎉 Era o ' + pokemonRespostaAtual.toUpperCase();
+    $('pokemon-img').style.filter = 'brightness(1)';
+    $('pokemon-input').disabled = true;
+    $('pokemon-enviar').disabled = true;
+    $('pokemon-proximo').hidden = false;
+  } else {
+    $('pokemon-status').textContent = 'Errou! Tente novamente.';
+  }
+});
+
+$('pokemon-proximo').addEventListener('click', async () => {
+  pokemonRespostaAtual = await APIs.carregarPokemonAleatorio({
+    imgEl: $('pokemon-img'),
+    statusEl: $('pokemon-status'),
+    inputEl: $('pokemon-input'),
+    btnEnviar: $('pokemon-enviar'),
+    btnProximo: $('pokemon-proximo')
+  });
+});
+
+$('btn-abrir-freetogame').addEventListener('click', () => {
+  $('secao-menu-jogos').hidden = true;
+  $('secao-freetogame').hidden = false;
+  APIs.carregarJogosGratis($('lista-freetogame'));
+});
+
+$('btn-voltar-menu-freetogame').addEventListener('click', () => {
+  $('secao-freetogame').hidden = true;
+  $('secao-menu-jogos').hidden = false;
+});
+
+// Event Listeners Principais
 $('btn-jogar-velha').addEventListener('click', () => abrirJogo('velha'));
 $('btn-jogar-cobrinha').addEventListener('click', () => abrirJogo('cobrinha'));
 $('btn-voltar-menu').addEventListener('click', voltarMenuJogos);

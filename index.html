@@ -1,97 +1,74 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#070913">
-  <title>TomarUma - Arcade</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main>
-    <header class="topo">
-      <h1>Tomar<span>Uma</span></h1>
-      <p>Jogue, suba de nível e dispute o ranking.</p>
-    </header>
-
-    <!-- Tela de login / cadastro -->
-    <section id="tela-auth" class="cartao glow">
-      <div class="abas">
-        <button id="aba-entrar" class="aba ativa" type="button">Entrar</button>
-        <button id="aba-criar" class="aba" type="button">Criar conta</button>
-      </div>
-
-      <form id="form-auth" novalidate>
-        <label id="campo-apelido" hidden>
-          Apelido
-          <input id="apelido" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="3 a 20 caracteres">
-        </label>
-        <label>
-          E-mail
-          <input id="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
-        </label>
-        <label>
-          Senha
-          <input id="senha" type="password" minlength="6" autocomplete="current-password" placeholder="mínimo 6 caracteres" required>
-        </label>
-        <button id="btn-enviar" type="submit" class="btn-principal">Entrar</button>
-        <p id="msg" role="status"></p>
-      </form>
-    </section>
-
-    <!-- Tela do jogador logado -->
-    <section id="tela-app" hidden>
-      <div class="cartao perfil glow">
-        <div>
-          <p class="rotulo">Jogador</p>
-          <h2 id="nome">-</h2>
-        </div>
-        <div class="pontos-info">
-          <strong id="pontos">0</strong>
-          <span>pontos</span>
-        </div>
-        <span id="selo" class="selo bronze">bronze</span>
-      </div>
-
       <!-- Seção de Seleção de Jogos -->
       <div id="secao-menu-jogos" class="cartao">
-        <h3>Escolha um Jogo</h3>
+        <h3>Escolha um Jogo e Dificuldade</h3>
+        
+        <div style="margin-bottom: 14px;">
+          <label style="margin-bottom: 6px; display: block;">Nível de Dificuldade:</label>
+          <select id="select-dificuldade" style="width: 100%; padding: 12px; background: #090c17; color: #f1f3ff; border: 1px solid var(--borda); border-radius: 12px; font-size: 1rem;">
+            <option value="facil">Fácil</option>
+            <option value="medio" selected>Médio</option>
+            <option value="dificil">Difícil</option>
+          </select>
+        </div>
+
         <div class="menu-jogos">
           <button id="btn-jogar-velha" class="btn-jogo">
             <span class="icone-jogo">❌</span>
             <div>
               <strong>Jogo da Velha</strong>
-              <small>Desafie o bot inteligente</small>
+              <small>Desafie o bot com a dificuldade escolhida</small>
             </div>
           </button>
           <button id="btn-jogar-cobrinha" class="btn-jogo">
             <span class="icone-jogo">🐍</span>
             <div>
               <strong>Cobrinha</strong>
-              <small>Coma maçãs e fuja da cauda</small>
+              <small>Velocidade e metas ajustadas ao nível</small>
+            </div>
+          </button>
+          <button id="btn-abrir-pokemon" class="btn-jogo">
+            <span class="icone-jogo">⚡</span>
+            <div>
+              <strong>Quem é esse Pokémon? (PokeAPI)</strong>
+              <small>Adivinhe o Pokémon e teste sua sorte</small>
+            </div>
+          </button>
+          <button id="btn-abrir-freetogame" class="btn-jogo">
+            <span class="icone-jogo">🎮</span>
+            <div>
+              <strong>Jogos Grátis (FreeToGame)</strong>
+              <small>Explore jogos de navegador recomendados</small>
             </div>
           </button>
         </div>
       </div>
 
-      <!-- Palco onde os jogos rodam -->
-      <div id="secao-jogo" class="cartao" hidden>
+      <!-- Seção do Mini-jogo PokeAPI -->
+      <div id="secao-pokemon" class="cartao" hidden>
         <div class="cabecalho-jogo">
-          <h3 id="titulo-jogo-ativo">Jogo</h3>
-          <button id="btn-voltar-menu" class="btn-secundario" type="button">Voltar ao Menu</button>
+          <h3>Adivinhe o Pokémon</h3>
+          <button id="btn-voltar-menu-pokemon" class="btn-secundario" type="button">Voltar ao Menu</button>
         </div>
-        <div id="palco-jogo"></div>
+        <div id="palco-pokemon" style="text-align: center;">
+          <p id="pokemon-status" class="status-jogo">Carregando Pokémon...</p>
+          <div style="margin: 16px 0;">
+            <img id="pokemon-img" src="" alt="Pokémon" style="width: 150px; height: 150px; filter: brightness(0); transition: filter 0.3s;" />
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <input id="pokemon-input" type="text" placeholder="Digite o nome..." style="max-width: 220px;" />
+            <button id="pokemon-enviar" class="btn-principal">Enviar</button>
+          </div>
+          <button id="pokemon-proximo" class="btn-secundario btn-largura-total" style="margin-top: 12px;" hidden>Próximo Pokémon</button>
+        </div>
       </div>
 
-      <div class="cartao">
-        <h3>Ranking Global</h3>
-        <ol id="ranking" class="ranking"></ol>
+      <!-- Seção do Catálogo FreeToGame -->
+      <div id="secao-freetogame" class="cartao" hidden>
+        <div class="cabecalho-jogo">
+          <h3>Jogos Grátis para Navegador</h3>
+          <button id="btn-voltar-menu-freetogame" class="btn-secundario" type="button">Voltar ao Menu</button>
+        </div>
+        <div id="lista-freetogame" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+          <p class="vazio">Carregando jogos...</p>
+        </div>
       </div>
-
-      <button id="btn-sair" class="btn-secundario btn-largura-total" type="button">Sair da Conta</button>
-    </section>
-  </main>
-
-  <script type="module" src="app.js"></script>
-</body>
-</html>
