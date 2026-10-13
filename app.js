@@ -8,6 +8,7 @@ const $ = (id) => document.getElementById(id);
 
 let modo = 'entrar';
 let instanciaJogoAtual = null;
+let tipoJogoAtivo = null;
 
 function mensagem(texto, tipo = 'erro') {
   const el = $('msg');
@@ -175,11 +176,10 @@ function pararJogoAtual() {
 }
 
 async function adicionarPontosFimDeJogo(resultado) {
-  // Atribui pontos baseados no resultado
   let pontosGanhos = 0;
   if (resultado === 'vitoria') pontosGanhos = 15;
   else if (resultado === 'empate') pontosGanhos = 5;
-  else pontosGanhos = 1; // derrota
+  else pontosGanhos = 1;
 
   const sessao = (await supabase.auth.getSession()).data.session;
   if (!sessao) return;
@@ -189,13 +189,16 @@ async function adicionarPontosFimDeJogo(resultado) {
   
   if (perfil) {
     const novosPontos = (perfil.points || 0) + pontosGanhos;
-    await supabase.from('profiles').update({ points: novosPontos }).eq('id', userId);
-    await atualizarDadosUsuario(sessao.user);
+    const { error } = await supabase.from('profiles').update({ points: novosPontos }).eq('id', userId);
+    if (!error) {
+      await atualizarDadosUsuario(sessao.user);
+    }
   }
 }
 
 function abrirJogo(tipo) {
   pararJogoAtual();
+  tipoJogoAtivo = tipo;
   $('secao-menu-jogos').hidden = true;
   $('secao-jogo').hidden = false;
   
@@ -206,12 +209,20 @@ function abrirJogo(tipo) {
     await adicionarPontosFimDeJogo(resultado);
   };
 
+  const aoReiniciar = () => {
+    abrirJogo(tipoJogoAtivo);
+  };
+
+  const aoVoltarMenu = () => {
+    voltarMenuJogos();
+  };
+
   if (tipo === 'velha') {
     titulo.textContent = 'Jogo da Velha';
-    instanciaJogoAtual = JogoVelha.iniciar(palco, aoTerminar);
+    instanciaJogoAtual = JogoVelha.iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu);
   } else if (tipo === 'cobrinha') {
     titulo.textContent = 'Cobrinha';
-    instanciaJogoAtual = JogoCobrinha.iniciar(palco, aoTerminar);
+    instanciaJogoAtual = JogoCobrinha.iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu);
   }
 }
 

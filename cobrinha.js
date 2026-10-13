@@ -1,12 +1,8 @@
 // Cobrinha: coma maçãs sem bater na parede nem no próprio corpo.
-// Resultado: 10 maçãs = vitória (a partida acaba na hora) | 5 a 9 = empate | menos de 5 = derrota.
-
 export const COLUNAS = 16;
 export const LINHAS = 16;
 export const META = 10;
 export const MINIMO_EMPATE = 5;
-
-// ---------- Lógica pura (sem tela) ----------
 
 export function sortearComida(cobra, rand = Math.random) {
   const ocupadas = new Set(cobra.map((c) => c.x + ',' + c.y));
@@ -20,12 +16,10 @@ export function sortearComida(cobra, rand = Math.random) {
 }
 
 export function novoEstado(rand = Math.random) {
-  const cobra = [{ x: 4, y: 8 }, { x: 3, y: 8 }, { x: 2, y: 8 }]; // cabeça primeiro
+  const cobra = [{ x: 4, y: 8 }, { x: 3, y: 8 }, { x: 2, y: 8 }];
   return { cobra, dir: { x: 1, y: 0 }, comida: sortearComida(cobra, rand), macas: 0, fim: null };
 }
 
-// Avança um passo. dirDesejada é opcional; inverter o sentido é ignorado.
-// fim: null (jogo segue) | 'parede' | 'corpo' | 'meta'
 export function passo(estado, dirDesejada, rand = Math.random) {
   if (estado.fim) return estado;
 
@@ -40,7 +34,6 @@ export function passo(estado, dirDesejada, rand = Math.random) {
   }
 
   const comeu = !!estado.comida && nova.x === estado.comida.x && nova.y === estado.comida.y;
-  // Se não comeu, a cauda sai do lugar, então ela não conta como obstáculo
   const corpo = comeu ? estado.cobra : estado.cobra.slice(0, -1);
   if (corpo.some((c) => c.x === nova.x && c.y === nova.y)) {
     return { ...estado, dir, fim: 'corpo' };
@@ -66,16 +59,14 @@ export function classificar(macas) {
   return 'derrota';
 }
 
-export const intervalo = (macas) => Math.max(70, 140 - macas * 7); // acelera a cada maçã
+export const intervalo = (macas) => Math.max(70, 140 - macas * 7);
 
 // ---------- Interface ----------
-// palco: elemento onde o jogo é desenhado.
-// aoTerminar(resultado, detalhe): 'vitoria' | 'empate' | 'derrota'
-export function iniciar(palco, aoTerminar) {
+export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
   palco.replaceChildren();
 
   let estado = novoEstado();
-  const fila = []; // até 2 comandos de direção guardados entre um passo e outro
+  const fila = [];
   let timer = null;
   let rodando = false;
   let encerrado = false;
@@ -92,8 +83,9 @@ export function iniciar(palco, aoTerminar) {
 
   const botaoIniciar = document.createElement('button');
   botaoIniciar.type = 'button';
-  botaoIniciar.className = 'btn primario';
-  botaoIniciar.textContent = 'Iniciar';
+  botaoIniciar.className = 'btn-principal btn-largura-total';
+  botaoIniciar.textContent = 'Iniciar Partida';
+  botaoIniciar.style.marginBottom = '12px';
 
   const dpad = document.createElement('div');
   dpad.className = 'dpad';
@@ -116,7 +108,29 @@ export function iniciar(palco, aoTerminar) {
     dpad.appendChild(b);
   }
 
-  palco.append(info, canvas, botaoIniciar, dpad);
+  // Painel de fim de jogo
+  const painelFim = document.createElement('div');
+  painelFim.className = 'painel-fim-jogo';
+  painelFim.hidden = true;
+
+  const btnReiniciar = document.createElement('button');
+  btnReiniciar.type = 'button';
+  btnReiniciar.className = 'btn-principal';
+  btnReiniciar.textContent = 'Jogar Novamente';
+  btnReiniciar.addEventListener('click', () => {
+    if (aoReiniciar) aoReiniciar();
+  });
+
+  const btnMenu = document.createElement('button');
+  btnMenu.type = 'button';
+  btnMenu.className = 'btn-secundario';
+  btnMenu.textContent = 'Menu Principal';
+  btnMenu.addEventListener('click', () => {
+    if (aoVoltarMenu) aoVoltarMenu();
+  });
+
+  painelFim.append(btnReiniciar, btnMenu);
+  palco.append(info, canvas, botaoIniciar, dpad, painelFim);
 
   function atualizarInfo() {
     info.textContent = 'MAÇÃS ' + estado.macas + ' / ' + META;
@@ -170,10 +184,12 @@ export function iniciar(palco, aoTerminar) {
       rodando = false;
       encerrado = true;
       info.textContent =
-        estado.fim === 'meta' ? 'META ATINGIDA!' : estado.fim === 'parede' ? 'BATEU NA PAREDE' : 'BATEU NO PRÓPRIO CORPO';
-      timer = setTimeout(() => {
-        aoTerminar(classificar(estado.macas), 'Maçãs: ' + estado.macas + ' de ' + META);
-      }, 800);
+        estado.fim === 'meta' ? 'META ATINGIDA!' : estado.fim === 'parede' ? 'BATEU NA PAREDE!' : 'BATEU NO PRÓPRIO CORPO!';
+      
+      dpad.hidden = true;
+      painelFim.hidden = false;
+
+      aoTerminar(classificar(estado.macas));
       return;
     }
     timer = setTimeout(tick, intervalo(estado.macas));
@@ -188,7 +204,6 @@ export function iniciar(palco, aoTerminar) {
 
   botaoIniciar.addEventListener('click', comecar);
 
-  // Teclado (computador)
   const teclas = {
     ArrowUp: [0, -1], w: [0, -1], W: [0, -1],
     ArrowDown: [0, 1], s: [0, 1], S: [0, 1],
@@ -203,7 +218,6 @@ export function iniciar(palco, aoTerminar) {
   }
   document.addEventListener('keydown', aoTeclar);
 
-  // Deslizar o dedo sobre o jogo (celular)
   let inicio = null;
   canvas.addEventListener('touchstart', (e) => {
     const t = e.changedTouches[0];

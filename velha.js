@@ -1,8 +1,4 @@
 // Jogo da Velha: você (X) contra o bot (O).
-// O bot usa a jogada perfeita (minimax), mas erra de propósito em parte das jogadas.
-// Assim ele é desafiador e ainda dá pra vencer. Para deixar mais fácil/difícil,
-// mude CHANCE_ERRO (0 = bot perfeito e invencível, 1 = bot totalmente aleatório).
-
 export const CHANCE_ERRO = 0.3;
 
 const COMBOS = [
@@ -19,7 +15,6 @@ export function linhaVencedora(t) {
   return null;
 }
 
-// Retorna 'X', 'O', 'empate' ou null (jogo em andamento)
 export function resultadoJogo(t) {
   const linha = linhaVencedora(t);
   if (linha) return t[linha[0]];
@@ -27,11 +22,8 @@ export function resultadoJogo(t) {
 }
 
 const livres = (t) => t.flatMap((v, i) => (v ? [] : [i]));
-
-// Guarda o valor de cada posição já calculada (deixa o bot instantâneo)
 const memoria = new Map();
 
-// Valor de uma posição para o bot: vitória rápida vale mais, derrota rápida vale menos.
 function minimax(t, vez, bot, humano) {
   const r = resultadoJogo(t);
   const ocupadas = t.filter(Boolean).length;
@@ -75,9 +67,7 @@ export function jogadaBot(t, chanceErro = CHANCE_ERRO, rand = Math.random) {
 }
 
 // ---------- Interface ----------
-// palco: elemento onde o jogo é desenhado.
-// aoTerminar(resultado): 'vitoria' | 'empate' | 'derrota'
-export function iniciar(palco, aoTerminar) {
+export function iniciar(palco, aoTerminar, aoReiniciar, aoVoltarMenu) {
   const t = Array(9).fill(null);
   let encerrada = false;
   let esperandoBot = false;
@@ -95,6 +85,7 @@ export function iniciar(palco, aoTerminar) {
 
   const status = document.createElement('p');
   status.className = 'status-jogo';
+  
   const grade = document.createElement('div');
   grade.className = 'velha';
 
@@ -108,7 +99,29 @@ export function iniciar(palco, aoTerminar) {
     return botao;
   });
 
-  palco.append(status, grade);
+  // Container de botões de fim de jogo (inicialmente oculto)
+  const painelFim = document.createElement('div');
+  painelFim.className = 'painel-fim-jogo';
+  painelFim.hidden = true;
+
+  const btnReiniciar = document.createElement('button');
+  btnReiniciar.type = 'button';
+  btnReiniciar.className = 'btn-principal';
+  btnReiniciar.textContent = 'Jogar Novamente';
+  btnReiniciar.addEventListener('click', () => {
+    if (aoReiniciar) aoReiniciar();
+  });
+
+  const btnMenu = document.createElement('button');
+  btnMenu.type = 'button';
+  btnMenu.className = 'btn-secundario';
+  btnMenu.textContent = 'Menu Principal';
+  btnMenu.addEventListener('click', () => {
+    if (aoVoltarMenu) aoVoltarMenu();
+  });
+
+  painelFim.append(btnReiniciar, btnMenu);
+  palco.append(status, grade, painelFim);
   status.textContent = 'SUA VEZ // VOCÊ É X';
 
   function marcar(i, marca) {
@@ -129,8 +142,13 @@ export function iniciar(palco, aoTerminar) {
 
     const resultado = r === 'X' ? 'vitoria' : r === 'O' ? 'derrota' : 'empate';
     status.textContent =
-      resultado === 'vitoria' ? 'VOCÊ VENCEU' : resultado === 'derrota' ? 'O BOT VENCEU' : 'DEU VELHA';
-    agendar(() => aoTerminar(resultado, ''), 900);
+      resultado === 'vitoria' ? 'VOCÊ VENCEU!' : resultado === 'derrota' ? 'O BOT VENCEU!' : 'DEU VELHA!';
+    
+    // Mostra botões de reiniciar/menu
+    painelFim.hidden = false;
+
+    // Notifica o app.js para salvar os pontos
+    aoTerminar(resultado);
     return true;
   }
 
@@ -145,7 +163,7 @@ export function iniciar(palco, aoTerminar) {
       marcar(jogadaBot(t), 'O');
       esperandoBot = false;
       if (!verificarFim()) status.textContent = 'SUA VEZ // VOCÊ É X';
-    }, 500);
+    }, 400);
   }
 
   return {

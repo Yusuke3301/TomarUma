@@ -213,3 +213,17 @@ h3 { margin: 0 0 12px; font-size: 1.05rem; letter-spacing: -0.3px; }
 .dpad .esq { grid-column: 1; }
 .dpad .baixo { grid-column: 2; }
 .dpad .dir { grid-column: 3; }
+
+.painel-fim-jogo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
