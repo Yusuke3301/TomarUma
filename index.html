@@ -1,3 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070913">
+  <title>TomarUma - Arcade</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header class="topo">
+      <h1>Tomar<span>Uma</span></h1>
+      <p>Jogue, suba de nível e dispute o ranking.</p>
+    </header>
+
+    <!-- Tela de login / cadastro -->
+    <section id="tela-auth" class="cartao glow">
+      <div class="abas">
+        <button id="aba-entrar" class="aba ativa" type="button">Entrar</button>
+        <button id="aba-criar" class="aba" type="button">Criar conta</button>
+      </div>
+
+      <form id="form-auth" novalidate>
+        <label id="campo-apelido" hidden>
+          Apelido
+          <input id="apelido" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="3 a 20 caracteres">
+        </label>
+        <label>
+          E-mail
+          <input id="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
+        </label>
+        <label>
+          Senha
+          <input id="senha" type="password" minlength="6" autocomplete="current-password" placeholder="mínimo 6 caracteres" required>
+        </label>
+        <button id="btn-enviar" type="submit" class="btn-principal">Entrar</button>
+        <p id="msg" role="status"></p>
+      </form>
+    </section>
+
+    <!-- Tela do jogador logado -->
+    <section id="tela-app" hidden>
+      <div class="cartao perfil glow">
+        <div>
+          <p class="rotulo">Jogador</p>
+          <h2 id="nome">-</h2>
+        </div>
+        <div class="pontos-info">
+          <strong id="pontos">0</strong>
+          <span>pontos</span>
+        </div>
+        <span id="selo" class="selo bronze">bronze</span>
+      </div>
+
       <!-- Seção de Seleção de Jogos -->
       <div id="secao-menu-jogos" class="cartao">
         <h3>Escolha um Jogo e Dificuldade</h3>
@@ -43,6 +98,15 @@
         </div>
       </div>
 
+      <!-- Palco onde os jogos (Velha / Cobrinha) rodam -->
+      <div id="secao-jogo" class="cartao" hidden>
+        <div class="cabecalho-jogo">
+          <h3 id="titulo-jogo-ativo">Jogo</h3>
+          <button id="btn-voltar-menu" class="btn-secundario" type="button">Voltar ao Menu</button>
+        </div>
+        <div id="palco-jogo"></div>
+      </div>
+
       <!-- Seção do Mini-jogo PokeAPI -->
       <div id="secao-pokemon" class="cartao" hidden>
         <div class="cabecalho-jogo">
@@ -72,3 +136,16 @@
           <p class="vazio">Carregando jogos...</p>
         </div>
       </div>
+
+      <div class="cartao">
+        <h3>Ranking Global</h3>
+        <ol id="ranking" class="ranking"></ol>
+      </div>
+
+      <button id="btn-sair" class="btn-secundario btn-largura-total" type="button">Sair da Conta</button>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
