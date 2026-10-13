@@ -226,6 +226,47 @@ function abrirJogo(tipo) {
   }
 }
 
+async function adicionarPontosFimDeJogo(resultado) {
+  let pontosGanhos = 0;
+  if (resultado === 'vitoria') pontosGanhos = 15;
+  else if (resultado === 'empate') pontosGanhos = 5;
+  else pontosGanhos = 1;
+
+  const sessao = (await supabase.auth.getSession()).data.session;
+  if (!sessao) return;
+
+  const userId = sessao.user.id;
+  
+  // Busca os pontos atuais
+  const { data: perfil, error: erroBusca } = await supabase
+    .from('profiles')
+    .select('points')
+    .eq('id', userId)
+    .single();
+  
+  if (erroBusca) {
+    console.error('Erro ao buscar perfil:', erroBusca.message);
+    return;
+  }
+
+  if (perfil) {
+    const novosPontos = (perfil.points || 0) + pontosGanhos;
+    
+    // Atualiza com os novos pontos
+    const { error: erroAtualizacao } = await supabase
+      .from('profiles')
+      .update({ points: novosPontos })
+      .eq('id', userId);
+
+    if (erroAtualizacao) {
+      console.error('Erro ao atualizar pontos (Verifique o RLS no Supabase):', erroAtualizacao.message);
+    } else {
+      await atualizarDadosUsuario(sessao.user);
+    }
+  }
+}
+
+
 function voltarMenuJogos() {
   pararJogoAtual();
   $('secao-jogo').hidden = true;
